@@ -1,0 +1,13 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/health",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "BOT_TOKEN",
+      "description": "Telegram bot token obtained from @BotFather when creating the bot",
+      "requiredAtBoot": false,
+      "generatedForDevelopment": true
+    }
+  ]
+}

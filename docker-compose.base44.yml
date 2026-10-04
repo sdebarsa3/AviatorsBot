@@ -1,0 +1,42 @@
+services:
+  mongodb:
+    image: mongo:4
+    restart: on-failure
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.base44
+    restart: on-failure
+    volumes:
+      - .:/app
+      - sbt-cache:/root/.sbt
+      - ivy-cache:/root/.ivy2
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    command: ["sh", "-ec", "exec sbt run"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+
+volumes:
+  mongo-data:
+  sbt-cache:
+  ivy-cache:

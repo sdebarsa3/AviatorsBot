@@ -11,16 +11,21 @@ import com.vektorraum.aviatorsbot.bot.util.ReporterUtil
 object AviatorsBotProduction extends AviatorsBot {
   def main(args: Array[String]): Unit = {
     logger.info("Starting production instance of AviatorsBot")
-    this.run()
+    StatusServer.start(3000)
+    try {
+      this.run()
 
-    Scheduler(config.getConfig("subscriptions.handler"), this.subscriptionHandler.run)
+      Scheduler(config.getConfig("subscriptions.handler"), this.subscriptionHandler.run)
 
-    ReporterUtil.graphiteReporter(config.getConfig("metrics.graphite"), this.metricRegistry)
-      .foreach(_.start(config.getInt("metrics.graphite.interval_s"), TimeUnit.SECONDS))
+      ReporterUtil.graphiteReporter(config.getConfig("metrics.graphite"), this.metricRegistry)
+        .foreach(_.start(config.getInt("metrics.graphite.interval_s"), TimeUnit.SECONDS))
 
-    ReporterUtil.csvReporter(config.getConfig("metrics.csv"), this.metricRegistry)
-      .foreach(_.start(config.getInt("metrics.csv.interval_s"), TimeUnit.SECONDS))
-
+      ReporterUtil.csvReporter(config.getConfig("metrics.csv"), this.metricRegistry)
+        .foreach(_.start(config.getInt("metrics.csv.interval_s"), TimeUnit.SECONDS))
+    } catch {
+      case scala.util.control.NonFatal(e) =>
+        logger.error("Bot startup failed (status server remains active on port 3000)", e)
+    }
   }
 
 }
